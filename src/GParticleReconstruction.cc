@@ -51,8 +51,13 @@ Bool_t	GParticleReconstruction::PostInit()
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_CB_proton_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
 		{
-			Cut_CB_proton_active = 1;
-			Cut_CB_proton = OpenCutFile(cutfilename,cutname);
+            try {
+                Cut_CB_proton_active = 1;
+                Cut_CB_proton = OpenCutFile(cutfilename,cutname);
+            } catch (...) {
+                cerr << "Failed to load cut! Terminating..." << endl;
+                exit(1);
+            }
 		}
 		else 
 		{
@@ -64,8 +69,13 @@ Bool_t	GParticleReconstruction::PostInit()
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_CB_pion_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
 		{
-			Cut_CB_pion_active = 1;
-			Cut_CB_pion = OpenCutFile(cutfilename,cutname);
+            try {
+                Cut_CB_pion_active = 1;
+                Cut_CB_pion = OpenCutFile(cutfilename,cutname);
+            } catch (...) {
+                cerr << "Failed to load cut! Terminating..." << endl;
+                exit(1);
+            }
 		}
 		else 
 		{
@@ -77,8 +87,13 @@ Bool_t	GParticleReconstruction::PostInit()
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_CB_electron_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
 		{
-			Cut_CB_electron_active = 1;
-			Cut_CB_electron = OpenCutFile(cutfilename,cutname);
+            try {
+                Cut_CB_electron_active = 1;
+                Cut_CB_electron = OpenCutFile(cutfilename,cutname);
+            } catch (...) {
+                cerr << "Failed to load cut! Terminating..." << endl;
+                exit(1);
+            }
 		}
 		else 
 		{
@@ -90,8 +105,13 @@ Bool_t	GParticleReconstruction::PostInit()
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_TAPS_proton_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
 		{
-			Cut_TAPS_proton_active = 1;
-			Cut_TAPS_proton = OpenCutFile(cutfilename,cutname);
+            try {
+                Cut_TAPS_proton_active = 1;
+                Cut_TAPS_proton = OpenCutFile(cutfilename,cutname);
+            } catch (...) {
+                cerr << "Failed to load cut! Terminating..." << endl;
+                exit(1);
+            }
 		}
 		else 
 		{
@@ -103,8 +123,13 @@ Bool_t	GParticleReconstruction::PostInit()
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_TAPS_pion_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
 		{
-			Cut_TAPS_pion_active = 1;
-			Cut_TAPS_pion = OpenCutFile(cutfilename,cutname);
+            try {
+                Cut_TAPS_pion_active = 1;
+                Cut_TAPS_pion = OpenCutFile(cutfilename,cutname);
+            } catch (...) {
+                cerr << "Failed to load cut! Terminating..." << endl;
+                exit(1);
+            }
 		}
 		else 
 		{
@@ -116,8 +141,13 @@ Bool_t	GParticleReconstruction::PostInit()
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_TAPS_electron_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
 		{
-			Cut_TAPS_electron_active = 1;
-			Cut_TAPS_electron = OpenCutFile(cutfilename,cutname);
+            try {
+                Cut_TAPS_electron_active = 1;
+                Cut_TAPS_electron = OpenCutFile(cutfilename,cutname);
+            } catch (...) {
+                cerr << "Failed to load cut! Terminating..." << endl;
+                exit(1);
+            }
 		}
 		else 
 		{
@@ -604,10 +634,32 @@ void	GParticleReconstruction::AddParticle(Int_t pdg_code, Int_t nindex, Int_t in
 	
 }
 
+/**
+ * @brief Load a cut from a ROOT file
+ * @param filename The ROOT file to open
+ * @param cutname The name of the TCutG object to load
+ * @return Pointer to the cut
+ * @throw bool false on any error
+ */
 TCutG*	GParticleReconstruction::OpenCutFile(Char_t* filename, Char_t* cutname)
 {
 	CutFile 	= new TFile(filename, "READ");
-	Cut 		= (TCutG*)CutFile->Get(cutname);
+
+    if( !CutFile || !CutFile->IsOpen() ) {
+        cerr << "Can't open cut file: " << filename << endl;
+        throw false;
+    }
+
+
+    // Try to find a TCutG with the name we want
+    // GetObject checks the type to be TCutG,
+    // see http://root.cern.ch/root/html534/TDirectory.html#TDirectory:GetObject
+    CutFile->GetObject(cutname, Cut);
+
+    if( !Cut ) {
+        cerr << "Could not find a TCutG with the name " << cutname << " in " << filename << endl;
+        throw false;
+    }
 	
 	TCutG* Cut_clone = Cut;
 	CutFile->Close();
