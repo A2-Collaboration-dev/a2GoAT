@@ -1,7 +1,14 @@
-
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// GParticleReconstruction                                              //
+//                                                                      //
+// Config-File: GoATHerder.dat                                          //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+ 
 #include "GParticleReconstruction.h"
 
-
+//____________________________________________________________________________________________________
 GParticleReconstruction::GParticleReconstruction() :
 							Identified(0),
 							nParticles(0),
@@ -12,18 +19,26 @@ GParticleReconstruction::GParticleReconstruction() :
 	Charge	 	= new Int_t[GAcquTREEMANAGER_MAX_PARTICLE];
 }
 
+
+//____________________________________________________________________________________________________
 GParticleReconstruction::~GParticleReconstruction()
 {
+	// Destructor
 }
 
+//____________________________________________________________________________________________________
 Bool_t	GParticleReconstruction::PostInit()
 {
+    // Do some further initialisation.
+    
 	cout << endl << "Particle Reconstruction turned ON" << endl;
 
 	cout << "Opening particle reconstruction tree: ";	
 	InitTreeParticles();
 	cout << endl;
 	
+	// Read from Config-File, whether or not Charged Particle Reconstruction is turned on.
+	// 0=off, 1=On over hole Theta range, 3=on over a given Theta range
 	config = ReadConfig("Do-Charged-Particle-Reconstruction");	
 	if (strcmp(config.c_str(), "nokey") == 0) ReconstructChargedParticles = 0;	
 	else if(sscanf( config.c_str(), "%d %lf %lf\n", 
@@ -43,10 +58,12 @@ Bool_t	GParticleReconstruction::PostInit()
 		return kFALSE;
 	}
 	
+	// If Charged Particle Reconstruction is active, apply the activated cuts
 	if (ReconstructChargedParticles == 1) 
 	{
 		cout << "Full Charged particle reconstruction is active" << endl;
 		
+		// Cut-dE-E-CB-Proton
 		config = ReadConfig("Cut-dE-E-CB-Proton");
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_CB_proton_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
@@ -64,7 +81,7 @@ Bool_t	GParticleReconstruction::PostInit()
 			cout << "ERROR: Cut-dE-E-CB-Proton set improperly" << endl;
 			return kFALSE;
 		}
-
+		// Cut-dE-E-CB-Pion
 		config = ReadConfig("Cut-dE-E-CB-Pion");
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_CB_pion_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
@@ -83,6 +100,7 @@ Bool_t	GParticleReconstruction::PostInit()
 			return kFALSE;
 		}
 
+		// Cut-dE-E-CB-Electron
 		config = ReadConfig("Cut-dE-E-CB-Electron");
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_CB_electron_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
@@ -101,6 +119,7 @@ Bool_t	GParticleReconstruction::PostInit()
 			return kFALSE;
 		}
 		
+		// Cut-dE-E-TAPS-Proton
 		config = ReadConfig("Cut-dE-E-TAPS-Proton");
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_TAPS_proton_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
@@ -119,6 +138,7 @@ Bool_t	GParticleReconstruction::PostInit()
 			return kFALSE;
 		}
 
+		// Cut-dE-E-TAPS-Pion
 		config = ReadConfig("Cut-dE-E-TAPS-Pion");
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_TAPS_pion_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
@@ -137,6 +157,7 @@ Bool_t	GParticleReconstruction::PostInit()
 			return kFALSE;
 		}
 
+		// Cut-dE-E-TAPS-Electron
 		config = ReadConfig("Cut-dE-E-TAPS-Electron");
 		if (strcmp(config.c_str(), "nokey") == 0) Cut_TAPS_electron_active = 0;
 		else if(sscanf( config.c_str(), "%s %s\n", cutfilename,cutname) == 2)
@@ -159,6 +180,9 @@ Bool_t	GParticleReconstruction::PostInit()
 	else cout << "Charged particle reconstruction is NOT active." << endl;
 	cout << endl;
 	
+	
+	// Read from Config-File, whether or not Meson Reconstruction is turned on.
+	// 0=off, 1=On over hole Theta range, 3=on over a given Theta range
 	config = ReadConfig("Do-Meson-Reconstruction");	
 	if (strcmp(config.c_str(), "nokey") == 0) ReconstructMesons = 0;	
 	else if(sscanf( config.c_str(), "%d %lf %lf\n", 
@@ -179,9 +203,10 @@ Bool_t	GParticleReconstruction::PostInit()
 		return kFALSE;
 	}
 	
-
+	// If Meson Reconstruction is active, apply the activated cuts
 	if (ReconstructMesons == 1) 
 	{
+		// Cut-IM-Width-Pi0
 		config = ReadConfig("Cut-IM-Width-Pi0");	
 		sscanf( config.c_str(), "%lf\n", &width_pi0);
 		if(width_pi0) cout << "Pi0 IM width cut set to " << width_pi0 << " MeV" << endl;
@@ -191,6 +216,7 @@ Bool_t	GParticleReconstruction::PostInit()
 			cout << "Pi0 IM width cut set to default (" << width_pi0 << " MeV)" << endl;
 		}
 
+		// Cut-IM-Width-Eta
 		config = ReadConfig("Cut-IM-Width-Eta");	
 		sscanf( config.c_str(), "%lf\n", &width_eta);
 		if(width_pi0) cout << "Eta IM width cut set to " << width_eta << " MeV" << endl;
@@ -200,6 +226,7 @@ Bool_t	GParticleReconstruction::PostInit()
 			cout << "Pi0 IM width cut set to default (" << width_eta << " MeV)" << endl;
 		}
 
+		// Cut-IM-Width-Eta-Prime
 		config = ReadConfig("Cut-IM-Width-Eta-Prime");	
 		sscanf( config.c_str(), "%lf\n", &width_etaP);
 		if(width_etaP) cout << "Eta-Prime IM width cut set to " << width_etaP << " MeV" << endl;
@@ -215,16 +242,20 @@ Bool_t	GParticleReconstruction::PostInit()
 	return kTRUE;
 }
 
+//____________________________________________________________________________________________________
 void	GParticleReconstruction::Reconstruct()
 {
+	// Mark everything as rootino
 	InitEvent();
+	
+	// Use PID and MWPC to distinguish between charged and neutral particles
 	CheckNeutrality();
     
 	/**
 	 * @todo Do TOF here!
 	 * @todo Do Neutron ID here! (TOF + Cluster size)
 	 **/
-	
+	// Identify all neutral rootinos as photons
 	PhotonReconstruction();	
 	
 	if(ReconstructChargedParticles == 1) 	ChargedReconstruction();
@@ -241,6 +272,7 @@ void	GParticleReconstruction::Reconstruct()
 	}
 }
 
+//____________________________________________________________________________________________________
 void	GParticleReconstruction::InitEvent()
 {
 	nParticles = 0; 	SetNParticles(nParticles);
@@ -254,20 +286,25 @@ void	GParticleReconstruction::InitEvent()
 	}	
 }
 
+//____________________________________________________________________________________________________
 void 	GParticleReconstruction::CheckNeutrality()
 {
 	// Rough start, this will soon be user controlled
 	for (int i = 0; i < GetNParticles(); i++){
 	
+		// If deposited energy in PID is between 0 and 1000, or MWPC1 or MWPC2 have a hit
 		if (  ((Get_dE(i) > 0.0) && (Get_dE(i) < 1000.0)) 
 			|| (GetWC0_E(i) > 0.0) || (GetWC1_E(i) > 0.0) ) 
 		{
+			// Identify particle as charged
 			 Charge[i] = 1;
 		}
+		// Otherways identify particle as neutral
 		else Charge[i] = 0;
 	}
 }
 
+//____________________________________________________________________________________________________
 void	GParticleReconstruction::PhotonReconstruction()
 {
 	// Mark neutral rootinos as photons (for now)
@@ -282,6 +319,7 @@ void	GParticleReconstruction::PhotonReconstruction()
 	}
 }
 
+//____________________________________________________________________________________________________
 void	GParticleReconstruction::ChargedReconstruction()
 {
 	
@@ -290,20 +328,27 @@ void	GParticleReconstruction::ChargedReconstruction()
 		if (GetTheta(i) < charged_theta_min) continue; // user rejected theta region
 		if (GetTheta(i) > charged_theta_max) continue; // user rejected theta region
 		
+		// Ask if Particle i was detected in the CB
 		if (GetApparatus(i) == EAppCB) 
 		{	
+			// If Cut-dE-E-CB-Proton was turned on in the Config-File, use the Cut-Proton for the CB
+			// and mark the proton cut as active
 			if(Cut_CB_proton_active)
 			{
 				Cut_proton = Cut_CB_proton;
 				Cut_proton_active = 1;
 			}
 			else Cut_proton_active = 0;
+			// If Cut-dE-E-CB-Pion was turned on in the Config-File, use the Cut-Pion for the CB
+			// and mark the pion cut as active
 			if(Cut_CB_pion_active)
 			{
 				Cut_pion = Cut_CB_pion;
 				Cut_pion_active = 1;
 			}
 			else Cut_pion_active = 0;
+			// If Cut-dE-E-CB-Electron was turned on in the Config-File, use the Cut-Electron for the CB
+			// and mark the electron cut as active
 			if(Cut_CB_electron_active)
 			{
 				Cut_electron = Cut_CB_electron;
@@ -311,20 +356,24 @@ void	GParticleReconstruction::ChargedReconstruction()
 			}
 			else Cut_electron_active = 0;
 		}
+		// If Particle was not detected in CB, ask if it was in TAPS. Proceed similar as for the CB.
 		else if (GetApparatus(i) == EAppTAPS)
 		{
+			// Cut-dE-E-TAPS-Proton
 			if(Cut_TAPS_proton_active)
 			{
 				Cut_proton = Cut_TAPS_proton;
 				Cut_proton_active = 1;
 			}
 			else Cut_proton_active = 0;
+			// Cut-dE-E-TAPS-Pion
 			if(Cut_TAPS_pion_active)
 			{
 				Cut_pion = Cut_TAPS_pion;
 				Cut_pion_active = 1;
 			}
 			else Cut_pion_active = 0;
+			// Cut-dE-E-TAPS-Electron
 			if(Cut_TAPS_electron_active)
 			{
 				Cut_electron = Cut_TAPS_electron;
@@ -333,29 +382,38 @@ void	GParticleReconstruction::ChargedReconstruction()
 			else Cut_electron_active = 0;	
 
 		}
+		// If a Proton-Cut was active (either in CB or in TAPS)
 		if(Cut_proton_active) 
 		{
+			// If dE and E are inside the Cut-Region
 			if(Cut_proton->IsInside(GetEk(i),Get_dE(i)))
 			{
+				// Identify particle as proton
 				SetInputMass(i,m_proton);	
 				AddParticle(pdg_proton,i);
 
 			}
 		}
 		
+		// If a Pion-Cut was active (either in CB or in TAPS)
 		if(Cut_pion_active) 
 		{		
+			// If dE and E are inside the Cut-Region
 			if(Cut_pion->IsInside(GetEk(i),Get_dE(i)))
 			{
+				// Identify particle as pion
 				SetInputMass(i,m_chpion);			
 				Identified[i] = pdg_chpion; 
 			}
 		}
 		
+		// If a Pion-Cut was active (either in CB or in TAPS)
 		if(Cut_electron_active) 
 		{		
+			// If dE and E are inside the Cut-Region
 			if(Cut_electron->IsInside(GetEk(i),Get_dE(i)))
 			{
+				// Identify particle as electron
 				SetInputMass(i,m_electron);			
 				Identified[i] = pdg_electron;
 			}
@@ -365,6 +423,7 @@ void	GParticleReconstruction::ChargedReconstruction()
 				
 }
 
+//____________________________________________________________________________________________________
 void	GParticleReconstruction::MesonReconstruction()
 {
 	Int_t		index1	  [GetNParticles() * (GetNParticles() -1)];
@@ -379,14 +438,30 @@ void	GParticleReconstruction::MesonReconstruction()
 
 	TLorentzVector	initialParticle[GetNParticles()];
 	TLorentzVector	reaction_p4;	
-		
+	
+	//////////////////////////////////////////////////////////////////////
+	// LEVEL 1:                                                         // 
+	// Test full reaction 4 momentum (ignoring protons and neutrons)    //
+	// This is to test the following complex decays                     //
+	// n' -> pi+  pi-  n                                                //
+	// n' -> pi0  pi0  n                                                //
+	// n  -> pi0  pi0  pi0                                              //
+	// n  -> pi0  pi+  pi-                                              //
+	// n  -> pi0 (pi+  pi-  g)  - omega meson intermediate state        //
+	// n  -> pi+  pi-  g		- direct n decay                        //
+	// 							    (or rho_0 intermediate state)       //
+	//////////////////////////////////////////////////////////////////////
+	
+	// Reaction four-vector reconstruction	
 	for (int i = 0; i < GetNParticles(); i++) 
 	{
 		if (GetTheta(i) < meson_theta_min) continue; // user rejected theta region
 		if (GetTheta(i) > meson_theta_max) continue; // user rejected theta region
 		
+		// Get four-vector for particle i
 		initialParticle[i] = GetVector(i);
 
+		// declare particle i as not a meson
 		is_meson[i] = kFALSE;
 		
 		// Construct reaction four-vector ignoring protons and neutrons
@@ -397,41 +472,38 @@ void	GParticleReconstruction::MesonReconstruction()
 			ndaughter++;
 		}
 	}
-	 
-	// LEVEL 1:   
-	// Test full reaction 4 momentum (ignoring protons and neutrons)
-	// This is to test the following complex decays
-	// n' -> pi+  pi-  n      
-	// n' -> pi0  pi0  n
-	// n  -> pi0  pi0  pi0    
-	// n  -> pi0  pi+  pi- 
-	// n  -> pi0 (pi+  pi-  g)  - omega meson intermediate state
-	// n  -> pi+  pi-  g		- direct n decay 
-	// 							    (or rho_0 intermediate state)
 	
 	Double_t diff_eta  = TMath::Abs( reaction_p4.M() - m_eta )/width_eta;
 	Double_t diff_etaP = TMath::Abs( reaction_p4.M() - m_etaP)/width_etaP;
 			
+	// Identify particle as eta, if (missing mass_eta)/width_eta < 1 
+	// and (missing mass_eta)/width_eta<(missing mass_etaP)/width_etaP
 	if ((diff_eta <= 1.0) && (diff_eta < diff_etaP))
 	{
 		AddParticle(pdg_eta,ndaughter,daughter_list);
 		return;		
 	}
+	// Identify particle as etaP, if (missing mass_etaP)/width_etaP < 1
+	// and (missing mass_etaP)/width_etaP<(missing mass_eta)/width_eta
 	if ((diff_etaP <= 1.0) && (diff_etaP < diff_eta))
 	{
 		AddParticle(pdg_etaP,ndaughter,daughter_list);
 		return;
 	}				
 	
-	// LEVEL 2:
-	// Well that didn't work, let's try to make some 2 particle checks	
-	// Loop over possible 2-particle combinations (skip i=j, ij = ji)
-	// to check pi0 -> 2g, n -> 2g , n' -> 2g
-	// Find all pairs within IM limits and sort by best Chi
-	// Don't double count in sorting!
-	// Reset daughter list
+	//////////////////////////////////////////////////////////////////////
+	// LEVEL 2:                                                         //
+	// Well that didn't work, let's try to make some 2 particle checks	//
+	// Loop over possible 2-particle combinations (skip i=j, ij = ji)   //
+	// to check pi0 -> 2g, n -> 2g , n' -> 2g                           //
+	// Find all pairs within IM limits and sort by best Chi             //
+	// Don't double count in sorting!                                   //
+	// Reset daughter list                                              //
+	//////////////////////////////////////////////////////////////////////
+	
 	ndaughter = 0;
 	Int_t k = 0;
+	
 	for (int i = 0; i < GetNParticles(); i++) 
     {
 		if (GetTheta(i) < meson_theta_min) continue; // user rejected theta region
@@ -442,17 +514,20 @@ void	GParticleReconstruction::MesonReconstruction()
 		
 		for (int j = i+1; j < GetNParticles(); j++) 
 		{
-			if (GetTheta(j) < meson_theta_min) continue; // user rejected theta region
-			if (GetTheta(j) > meson_theta_max) continue; // user rejected theta region
-			
 			if (Identified[j] == pdg_proton) 	continue;
 			if (Identified[j] == pdg_neutron) 	continue;
+			
+			if (GetTheta(j) < meson_theta_min) continue; // user rejected theta region
+			if (GetTheta(j) > meson_theta_max) continue; // user rejected theta region
 			
 			TLorentzVector p4 = initialParticle[i] + initialParticle[j];
 			
 			Double_t diff_pi0  = TMath::Abs( p4.M() - m_pi0 )/width_pi0;
 			Double_t diff_eta  = TMath::Abs( p4.M() - m_eta )/width_eta;
 			Double_t diff_etaP = TMath::Abs( p4.M() - m_etaP)/width_etaP;
+			
+			
+			// Temporal meson Identification, check in the next step, if particle was already identified
 			
 			if ((diff_pi0 <= 1.0) && (diff_pi0 < diff_eta) && (diff_pi0 < diff_etaP)) 
 			{
@@ -493,6 +568,8 @@ void	GParticleReconstruction::MesonReconstruction()
 		is_meson[index1[i]] = kTRUE;
 		is_meson[index2[i]] = kTRUE;
 		
+		
+		// Meson identification, if the particle was not yet identified.
 		if( tempID[i] == pdg_pi0) 
 		{
 			ndaughter = 2;
@@ -519,6 +596,7 @@ void	GParticleReconstruction::MesonReconstruction()
 		
 }
 
+//____________________________________________________________________________________________________
 void	GParticleReconstruction::AddParticle(Int_t pdg_code, Int_t nindex, Int_t index_list[])
 {
 
@@ -539,6 +617,7 @@ void	GParticleReconstruction::AddParticle(Int_t pdg_code, Int_t nindex, Int_t in
 	Int_t  	 SumCharge   = Charge[index_list[0]];
 	
 	Int_t	 ndaughters  = 0;
+	
 	if (nindex > 1) 
 	{	
 		// store in daughter list for meson analysis
@@ -644,6 +723,8 @@ void	GParticleReconstruction::AddParticle(Int_t pdg_code, Int_t nindex, Int_t in
  * @return Pointer to the cut
  * @throw bool false on any error
  */
+ 
+//____________________________________________________________________________________________________ 
 TCutG*	GParticleReconstruction::OpenCutFile(Char_t* filename, Char_t* cutname)
 {
 	CutFile 	= new TFile(filename, "READ");
