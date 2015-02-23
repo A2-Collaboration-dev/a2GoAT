@@ -42,6 +42,40 @@ GTreePluto::ParticleList GTreePluto::GetAllParticles() const
     return list;
 }
 
+PParticle* GTreePluto::GetMCTrue(const int idx) const throw(std::exception)
+{
+    if (!PlutoMCTrue)
+        //return nullptr;
+        throw noTree;
+
+    return dynamic_cast<PParticle*>(PlutoMCTrue->At(idx));
+}
+
+TLorentzVector GTreePluto::GetTrueP4(const int idx) const throw(std::exception)
+{
+    if (!PlutoMCTrue)
+        //return TLorentzVector(0., 0., 0., 0.);
+        throw noTree;
+
+    return dynamic_cast<PParticle*>(PlutoMCTrue->At(idx))->Vect4();
+}
+
+// Assume proton target if no argument is given
+TLorentzVector GTreePluto::GetTrueBeam() const
+{
+    return GetTrueBeam(TLorentzVector(0., 0., 0., .938272), 14001);
+}
+
+TLorentzVector GTreePluto::GetTrueBeam(const TLorentzVector target, const int beamID) const
+{
+    ParticleList list = GetAllParticles();
+
+    ParticleList::iterator it = std::find_if(list.begin(), list.end(), [beamID](PParticle const& p){ return p.ID() == beamID; });
+    if (it == list.end())
+        return TLorentzVector(0., 0., 0., 0.);
+
+    return (*it)->Vect4() - target;
+}
 
 void    GTreePluto::SetBranchAdresses()
 {
