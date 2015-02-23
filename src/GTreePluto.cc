@@ -42,6 +42,37 @@ GTreePluto::ParticleList GTreePluto::GetAllParticles() const
     return list;
 }
 
+PParticle* GTreePluto::GetMCTrue(const int idx) const
+{
+    if (!PlutoMCTrue) {
+        //return nullptr;
+        fprintf(stderr, "ERROR: No Pluto Tree in current file!\n");
+        exit(1);
+    }
+
+    return dynamic_cast<PParticle*>(PlutoMCTrue->At(idx));
+}
+
+TLorentzVector GTreePluto::GetTrueP4(const int idx) const
+{
+    if (!PlutoMCTrue) {
+        fprintf(stderr, "ERROR: No Pluto Tree in current file!\n");
+        exit(1);
+    }
+
+    return dynamic_cast<PParticle*>(PlutoMCTrue->At(idx))->Vect4();
+}
+
+// Assume proton target
+TLorentzVector GTreePluto::GetTrueBeam() const
+{
+    if (!PlutoMCTrue) {
+        fprintf(stderr, "ERROR: No Pluto Tree in current file!\n");
+        exit(1);
+    }
+
+    return dynamic_cast<PParticle*>(PlutoMCTrue->At(0))->Vect4() - TLorentzVector(0., 0., 0., .938272);
+}
 
 void    GTreePluto::SetBranchAdresses()
 {
