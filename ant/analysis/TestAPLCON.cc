@@ -62,7 +62,7 @@ ant::analysis::TestAPLCON::TestAPLCON(const mev_t energy_scale) :
 {
 
 
-    const BinSettings energy_bins(1000,0,energy_scale);
+    const BinSettings energy_bins(1000,0,energy_scale*1.6);
     const BinSettings tagger_bins(2000,0.0,2000);
     const BinSettings ntaggerhits_bins(100);
     const BinSettings veto_bins(1000,0,10.0);
@@ -208,7 +208,13 @@ ant::analysis::TestAPLCON::TestAPLCON(const mev_t energy_scale) :
 
 
     for(const auto& varname : fitter.VariableNames()) {
-        pulls[varname] = HistFac.makeTH1D("Pull "+varname,
+        string title(varname);
+        size_t pos = title.find("[");
+        if (pos != string::npos) {
+            const string prop = " " + component.at(atoi(&varname.at(pos+1)));
+            title.replace(pos, 3, prop);
+        }
+        pulls[varname] = HistFac.makeTH1D("Pull "+title,
                                    "Pull", "#",
                                    pull_bins,
                                    "pull_"+varname);
